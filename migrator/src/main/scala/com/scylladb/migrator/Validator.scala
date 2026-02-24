@@ -5,7 +5,7 @@ import com.scylladb.migrator.config.{ MigratorConfig, SourceSettings, TargetSett
 import com.scylladb.migrator.validation.RowComparisonFailure
 import org.apache.log4j.{ Level, LogManager, Logger }
 import org.apache.spark.sql.SparkSession
-import com.scylladb.migrator.scylla.ScyllaValidator
+import com.scylladb.migrator.scylla.{ MySQLToScyllaValidator, ScyllaValidator }
 
 object Validator {
   val log = LogManager.getLogger("com.scylladb.migrator")
@@ -17,6 +17,8 @@ object Validator {
         ScyllaValidator.runValidation(cassandraSource, scyllaTarget, config)
       case (dynamoSource: SourceSettings.DynamoDB, alternatorTarget: TargetSettings.DynamoDB) =>
         AlternatorValidator.runValidation(dynamoSource, alternatorTarget, config)
+      case (mysqlSource: SourceSettings.MySQL, scyllaTarget: TargetSettings.Scylla) =>
+        MySQLToScyllaValidator.runValidation(mysqlSource, scyllaTarget, config)
       case _ =>
         sys.error("Unsupported combination of source and target " +
           s"(found ${config.source.getClass.getSimpleName} and ${config.target.getClass.getSimpleName} settings)")
