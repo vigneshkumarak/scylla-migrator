@@ -77,7 +77,10 @@ object Validator {
         else None
       ).flatten.mkString(", ")
 
+      val autoRepaired = migratorConfig.validation.exists(_.autoRepair)
       log.error(s"Found ${failures.size} comparison failure(s): $breakdown")
+      if (autoRepaired)
+        log.info("Auto-repair was executed during validation. Re-run the validator to confirm.")
       log.error(failures.mkString("\n"))
       System.exit(1)
     }

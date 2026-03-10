@@ -59,6 +59,7 @@ validation:
   failuresToFetch: 100
   floatingPointTolerance: 0.001
   timestampMsTolerance: 1000
+  autoRepair: true
   hashColumns:
     - content
     - content_html

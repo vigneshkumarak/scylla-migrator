@@ -20,6 +20,10 @@ import io.circe.generic.extras.semiauto._
   *   When set, these columns are replaced by a single MD5 hash on the MySQL side and computed via
   *   Spark on the ScyllaDB side. This dramatically reduces data transfer for large text/blob
   *   columns. Only applies to MySQL-to-ScyllaDB validation.
+  * @param autoRepair
+  *   When true, the validator will re-read the problematic rows from MySQL and write them to
+  *   ScyllaDB, fixing both missing rows and rows with differing field values. Only applies to
+  *   MySQL-to-ScyllaDB validation. Defaults to false.
   */
 case class Validation(
   compareTimestamps: Boolean,
@@ -28,7 +32,8 @@ case class Validation(
   failuresToFetch: Int,
   floatingPointTolerance: Double,
   timestampMsTolerance: Long,
-  hashColumns: Option[List[String]] = None
+  hashColumns: Option[List[String]] = None,
+  autoRepair: Boolean = false
 )
 object Validation {
   implicit val config: Configuration = Configuration.default.withDefaults

@@ -20,17 +20,18 @@ object MySQL {
     SourceDataFrame(mapped, timestampColumns = None, savepointsSupported = false)
   }
 
-  /**
-    * Read from MySQL with hash-based optimization for validation. The specified columns
-    * are replaced by a single MD5 hash computed server-side in MySQL, dramatically reducing
-    * network data transfer. MySQL still reads the columns from disk for hashing, but only
-    * the 32-byte hash is sent over the wire.
+  /** Read from MySQL with hash-based optimization for validation. The specified columns are
+    * replaced by a single MD5 hash computed server-side in MySQL, dramatically reducing network
+    * data transfer. MySQL still reads the columns from disk for hashing, but only the 32-byte hash
+    * is sent over the wire.
     *
     * The resulting DataFrame contains all non-hashed columns plus a `_content_hash` column.
     */
-  def readDataframeWithHash(spark: SparkSession,
-                            source: SourceSettings.MySQL,
-                            hashColumns: List[String]): DataFrame = {
+  def readDataframeWithHash(
+    spark: SparkSession,
+    source: SourceSettings.MySQL,
+    hashColumns: List[String]
+  ): DataFrame = {
     val df = readDataframeRaw(spark, source, hashColumns = Some(hashColumns))
     log.info("MySQL hash-based schema:")
     df.printSchema()
@@ -46,8 +47,7 @@ object MySQL {
       s"&maxAllowedPacket=$maxPacket&useCursorFetch=true"
   }
 
-  /**
-    * Discover column names by reading zero rows from the MySQL table.
+  /** Discover column names by reading zero rows from the MySQL table.
     */
   private def discoverColumns(spark: SparkSession, source: SourceSettings.MySQL): Array[String] = {
     val url = buildJdbcUrl(source)
@@ -63,9 +63,11 @@ object MySQL {
     schema.fieldNames
   }
 
-  private def readDataframeRaw(spark: SparkSession,
-                               source: SourceSettings.MySQL,
-                               hashColumns: Option[List[String]]): DataFrame = {
+  private def readDataframeRaw(
+    spark: SparkSession,
+    source: SourceSettings.MySQL,
+    hashColumns: Option[List[String]]
+  ): DataFrame = {
     val jdbcUrl = buildJdbcUrl(source)
 
     log.info(s"Connecting to MySQL at ${source.host}:${source.port}/${source.database}")
@@ -80,8 +82,8 @@ object MySQL {
       .option("driver", "com.mysql.cj.jdbc.Driver")
       .option("fetchsize", source.fetchSize)
 
-    source.connectionProperties.getOrElse(Map.empty).foreach {
-      case (k, v) => reader = reader.option(k, v)
+    source.connectionProperties.getOrElse(Map.empty).foreach { case (k, v) =>
+      reader = reader.option(k, v)
     }
 
     val tableExpression = hashColumns match {
@@ -114,7 +116,8 @@ object MySQL {
         log.info(
           s"Using partitioned read: column=$col, partitions=$n, " +
             s"lowerBound=${source.lowerBound.getOrElse(0L)}, " +
-            s"upperBound=${source.upperBound.getOrElse(Long.MaxValue)}")
+            s"upperBound=${source.upperBound.getOrElse(Long.MaxValue)}"
+        )
         reader = reader
           .option("partitionColumn", col)
           .option("numPartitions", n)
@@ -123,15 +126,18 @@ object MySQL {
       case (Some(col), None) =>
         sys.error(
           s"partitionColumn '$col' specified but numPartitions is missing. " +
-            "Both partitionColumn and numPartitions must be set together for partitioned reads.")
+            "Both partitionColumn and numPartitions must be set together for partitioned reads."
+        )
       case (None, Some(n)) =>
         sys.error(
           s"numPartitions ($n) specified but partitionColumn is missing. " +
-            "Both partitionColumn and numPartitions must be set together for partitioned reads.")
+            "Both partitionColumn and numPartitions must be set together for partitioned reads."
+        )
       case _ =>
         log.warn(
           "No partitioning configured. This will read the entire table in a single partition. " +
-            "For large tables (2TB+), set partitionColumn and numPartitions for parallel reads.")
+            "For large tables (2TB+), set partitionColumn and numPartitions for parallel reads."
+        )
     }
 
     val rawDf = reader.load()
